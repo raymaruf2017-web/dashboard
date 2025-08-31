@@ -1,185 +1,250 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Peralatan Mesin Kabupaten Donggala</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8" />
+  <title>Dashboard Aset Sekolah — Rekap Kabupaten</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    .card { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  </style>
 </head>
-<body class="bg-gray-100 p-6 flex">
+<body class="bg-gray-100 min-h-screen text-gray-800">
+<div class="container mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-4 text-center">📊 Dashboard Aset Sekolah — Rekap Kabupaten</h1>
 
-<!-- Sidebar -->
-<nav class="w-64 bg-white shadow-md border-r border-gray-200 flex flex-col">
-  <div class="px-6 py-4 border-b border-gray-200 text-xl font-semibold text-blue-700">ASET DIKBUD</div>
-
-  <!-- Menu Kecamatan Dropdown -->
-  <div class="group border-b border-gray-200">
-    <button id="kecamatanBtn" class="w-full flex justify-between items-center px-6 py-3 hover:bg-blue-100 focus:outline-none">
-      <span class="font-medium text-gray-700">Kecamatan</span>
-      <svg id="kecamatanArrow" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
-    </button>
-    <ul id="kecamatanDropdown" class="hidden flex-col border-t border-gray-200 bg-gray-50">
-      <!-- Contoh kecamatan -->
-      <li data-kecamatan="Banawa" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vRd8vIhHDUbmD6I2aXLX7-_Ysemt2aXA__wKNGoKN0XWWSWCScv5aSmx06H0xkl8g/pub?gid=1917777904&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Banawa</li>
-      <li data-kecamatan="Banawa Tengah" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vRnykw5e_i3dwBIeTua-mpFExEJ4w6hROJ5F6OUHiiGpbtunldeKgXlhN_G-D1V8w/pub?gid=1454720232&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Banawa Tengah</li>
-      <li data-kecamatan="Banawa Selatan" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vRhDJK33BtCz7KEi6DWgqheZBrcdgK0X9Pw1r28u5ec1MK-I-kP-QOqrsY0G2OnEQ/pub?gid=708970016&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Banawa Selatan</li>
-      <li data-kecamatan="Rio Pakava" data-endpoint="URL_CSV_RioPakava" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Rio Pakava</li>
-      <li data-kecamatan="Pinembani" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vQshgCYmG0DHxcwLUzhtUamXTYnWb8tR7WQwnJq9k7ldFz_JhV4GHDE-k_dMO_pSA/pub?gid=1860451546&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Pinembani</li>
-      <li data-kecamatan="Tanantovea" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3MhjBMD3q8UIfOTdAUOHKMdeGcwr3y2YQGFcDmHDd0IVsOsAECl511LsNJ9ynow9cmY4yBpP1jENa/pub?gid=1200528899&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Tanantovea</li>
-      <li data-kecamatan="Labuan" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vT7WqNsmpUBIy0-lVm2JdGg1KUKwNgQPpbSyDuuFDwB1aGPY8gsZSBWmxIgiOeJNA/pub?gid=1615242439&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Labuan</li>
-      <li data-kecamatan="Sindue" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2sjcmJjTCYD3p6-7pDQTmm3mCVphZIP2-5DGZOHxStucexMcdqPVsfsbnDouFcA/pub?gid=1920885371&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Sindue</li>
-      <li data-kecamatan="Sindue Tombusabora" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vRYHOyrOQ_hNjC1L1FoIMVbbWES0dPGb1OaU6V--PV_lm0O97IHFvtPRhgRNXn_dA/pub?gid=1974330298&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Sindue Tombusabora</li>
-      <li data-kecamatan="Sindue Tobata" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vQIbvzs-jZRcf1z0uV_Ahwh6dNdBgBHw66T358D9wd0-DHimDs8r4ajCvZwLa8Srg/pub?gid=801352666&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Sindue Tobata</li>
-      <li data-kecamatan="Sirenja" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vROhU6H6reNQxHKsAmYYgfcaSZyis1vALTmBkYhjAp7BGX_wNdA2cVdgOjFQIIgjQ/pub?output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Sirenja</li>
-      <li data-kecamatan="Balaesang" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vQIf6mV6qgS6fmRe3jz305N8wCDdKWJcKKWSxHtybbo7xoERx15unD-x4rgyFxF-g/pub?gid=1401841928&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Balaesang</li>
-      <li data-kecamatan="Balaesang Tanjung" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vQRojLHXJ4W6IEdiNn34kZrMgr5QvPZllm85-sbgD0WxjG6vFMUMQz3QzzGnM-7pw/pub?gid=820099832&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Balaesang Tanjung</li>
-      <li data-kecamatan="Dampelas" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vR_BmCgfv-HOMRKzNMZ1aHL05CZsR7Ie0VZGRJTD29tX1C-ANiKASW1hB_PM69WuQ/pub?gid=1489077321&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Dampelas</li>
-      <li data-kecamatan="Sojol" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vT64A3AbrmT4TK8fLj5ctUc3LLMESXVTOuw3nBd2qRTEFIljaxTBW3-Z5u4w7W2Ng/pub?gid=1781390946&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Sojol</li>
-      <li data-kecamatan="Sojol Utara" data-endpoint="https://docs.google.com/spreadsheets/d/e/2PACX-1vT41KwECicPb2EY8d8BP1f73RM3dhVWYDOxpaFlHZluKFy9owLzyVX7N7mIUm37Tw/pub?gid=502544387&single=true&output=csv" class="px-6 py-2 cursor-pointer hover:bg-blue-50">Sojol Utara</li>
-    </ul>
-  </div>
-</nav>
-
-<!-- Main Content -->
-<main class="flex-1 p-6">
-  <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-2">
-    <h1 class="text-xl font-bold">Data Peralatan Mesin Kabupaten Donggala</h1>
-    <div class="flex gap-2">
-      <input id="searchInput" type="text" placeholder="Cari data..." class="px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
-      <button id="btnPdf" class="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600">PDF</button>
-      <button id="btnExcel" class="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600">Excel</button>
+  <div class="flex flex-col md:flex-row gap-4 mb-4 items-start">
+    <div class="card w-full md:w-2/3">
+      <label class="block font-semibold mb-2">Pilih Kecamatan</label>
+      <select id="kecamatanSelect" class="p-2 border rounded w-full mb-2"></select>
+    </div>
+    <div class="card w-full md:w-1/3 flex flex-col gap-2">
+      <button id="refreshBtn" class="px-3 py-2 bg-indigo-600 text-white rounded">🔄 Muat Ulang Data</button>
+      <button id="exportAllExcel" class="px-3 py-2 bg-green-600 text-white rounded">📥 Export Semua (Excel)</button>
+      <button id="exportAllPDF" class="px-3 py-2 bg-red-600 text-white rounded">📄 Export Semua (PDF)</button>
     </div>
   </div>
 
-  <div id="outputWrapper" class="bg-white border rounded shadow overflow-x-auto max-h-[600px] overflow-y-auto">
-    <div id="output" class="min-w-[800px]">
-      <p class="p-4">Memuat data...</p>
+  <div id="loading" class="hidden mb-6">
+    <div class="flex items-center gap-3">
+      <div class="animate-spin w-6 h-6 border-2 border-blue-300 border-t-blue-600 rounded-full"></div>
+      <div class="text-sm font-medium">Memuat data dari spreadsheet...</div>
     </div>
   </div>
-</main>
+
+  <!-- Detail Sekolah -->
+  <div id="detailContainer" class="mb-10"></div>
+</div>
 
 <script>
-// Variabel global
-const kecamatanDropdown = document.getElementById('kecamatanDropdown');
-const kecamatanBtn = document.getElementById('kecamatanBtn');
-const kecamatanArrow = document.getElementById('kecamatanArrow');
-const output = document.getElementById('output');
-const searchInput = document.getElementById('searchInput');
+const dataKecamatan = {
+ "Banawa": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSCAaRZ9atAiEb-BvMChP_3Wq6wtmUUlNiTWVtwzh7r9KX5sRRZpq5WppSrSebym8z6-qI3zfWQOTNu/pub?gid=0&single=true&output=csv",
+  "Banawa Tengah": "https://docs.google.com/spreadsheets/d/e/2PACX-1vToEAn2MqanfOGSKsDsV0cfGeXt6mJhf7DPEzgFeBl8GQkrbzd4iFuM3tRwyo_wV6m9PlxjQ-9Z0QhC/pub?gid=0&single=true&output=csv",
+  "Banawa Selatan": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwth8ToDewTdvfvhlYuywOolNFwvc6eA4wer_OGKgNk-FoDvIQaHthsQHtMiis3cAsj4AnLzYKXG9p/pub?gid=0&single=true&output=csv",
+  "Rio Pakava": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQX_Z6U7nanrMlPxL8N1m40jkFiMAHCIbZQA_iljNj3QZ8Z5FGMTAzYBbAC_D9Xy2PT3fUf0LL0n7F/pub?gid=0&single=true&output=csv",
+  "Pinembani": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQcReqyQvHT1K094wmITv7oL1dpVGSA7K139SmWIlNcJzVItMNLyCz0Q-u5Sg1H1QXs1R9mNyL73SBj/pub?gid=0&single=true&output=csv",
+  "Tanantovea": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGT-OgwESxefxs2tnW_OoIZk2c76I6fKSqaQUoibT4B_-QVNtPPMZSDnEaawJRGaLB3tP-ChoDugoi/pub?gid=0&single=true&output=csv",
+  "Labuan": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaDzmjVhNzRnMTJWg2JkvR1DYTiDSl2S6-MisvcSFD9P7MB2rVxA2zRgS0Rd0-f-xpIt1db1O1ppXx/pub?gid=0&single=true&output=csv",
+  "Sindue": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnq_cellwa56qRzTfYLpUxHoLxpiQOBBmiAUCkdeJK8-tLMVawW9BLrWUA_Q_kMswogfdZlmWjHGQT/pub?gid=0&single=true&output=csv",
+  "Sindue Tombusabora": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS11oEXPUetCOBorbbFNejuPEMsw4L8GYp-ETIbncBOgBfOtvLruTC82mUd-vxb7fj6sXopy16axzXi/pub?gid=0&single=true&output=csv",
+  "Sindue Tobata": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQg_48k1uaVtdc2v4UgVwn3PBxAFP4gfEhIR_OCBKVOcSrHRUYS1jPO1P1E1qnHGM_WcqDB2TFkE74t/pub?gid=0&single=true&output=csv",
+  "Sirenja": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQpFtH1q7lOez0grPXzNd1AAU93FZQZPSCyVrT4RneIumbxU0CbvukEfotyjhq01gYVLhK0_WblO_HO/pub?gid=0&single=true&output=csv",
+  "Balaesang": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQevpAs3bjvgOzZDc8uq2PoebzqXVEFCvggoqJvn8AO-d1M0BCI0k7QYKB9hTgymfUIXx68oVR27IV/pub?gid=0&single=true&output=csv",
+  "Balaesang Tanjung": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQljJh_fOmCwjRVlTt5k8WxpN3TzaSyhWDXNnkDjI8hm62x1jdE41mXNENd2iGUueNyuXJuLa4jpoF6/pub?gid=0&single=true&output=csv",
+  "Dampelas": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTIi8ZSNx9-MetxVLFAxiS4MeBiFOuOeYbe4_Bf9EEQ2btWYDfIY15B6r_tBg33l0AFATRQrdoQyMq/pub?gid=0&single=true&output=csv",
+  "Sojol": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_M8W7eNSRgJiDs-lU0zBDAT2OEAN6J1g1G9UvgreUf7GS0_Q987XsgzYdDESWAu_P86BezxKn6nJl/pub?gid=0&single=true&output=csv",
+  "Sojol Utara": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJAkrtkVPBLcUmM8OsByQDfndFGv-6MetoMsB_DGoqimZQGcAg9Lxe_glv_qAJoVXoY9TCHdnCDa6Y/pub?gid=0&single=true&output=csv"
+};
 
-let dataAll = [];
-let filteredData = [];
+let allData = [];
 
-// Toggle dropdown kecamatan
-kecamatanBtn.addEventListener('click', () => {
-  kecamatanDropdown.classList.toggle('hidden');
-  kecamatanArrow.classList.toggle('rotate-180');
-});
-
-// Fetch data CSV
-kecamatanDropdown.addEventListener('click', (e) => {
-  if (e.target.tagName === 'LI') {
-    const endpoint = e.target.getAttribute('data-endpoint');
-    fetch(endpoint)
-      .then(res => res.text())
-      .then(text => {
-        const cleanCSV = text.replace(/^\uFEFF/, '').trim();
-        Papa.parse(cleanCSV, {
-          header: true,
-          skipEmptyLines: true,
-          complete: results => {
-            dataAll = results.data;
-            filteredData = [...dataAll];
-            renderTable(filteredData);
-          },
-          error: err => output.innerHTML = `<p class="p-4 text-red-500">Gagal parse CSV: ${err}</p>`
-        });
-      })
-      .catch(err => output.innerHTML = `<p class="p-4 text-red-500">Gagal fetch CSV: ${err}</p>`);
-  }
-});
-
-// Pencarian
-searchInput.addEventListener('input', () => {
-  const kw = searchInput.value.toLowerCase();
-  filteredData = dataAll.filter(row =>
-    Object.values(row).some(val => val?.toString().toLowerCase().includes(kw))
-  );
-  renderTable(filteredData);
-});
-
-// Render tabel
-function renderTable(data) {
-  if (!data.length) {
-    output.innerHTML = '<p class="p-4 text-gray-500">Data kosong.</p>';
-    return;
-  }
-
-  const cols = Object.keys(data[0]);
-  // Hanya kolom A,B,K–AB (index 0,1,10–27)
-  const visibleCols = cols.filter((c, i) => i === 0 || i === 1 || (i >= 10 && i <= 27));
-
-  let table = '<table id="dataTable" class="min-w-full border border-gray-300 text-sm table-auto">';
-  table += '<thead class="bg-gray-200 sticky top-0 z-10"><tr>';
-  visibleCols.forEach(c => table += `<th class="border px-2 py-1 text-center whitespace-nowrap">${c}</th>`);
-  table += '</tr></thead><tbody>';
-
-  data.forEach(row => {
-    table += '<tr>';
-    visibleCols.forEach(c => table += `<td class="border px-2 py-1 whitespace-nowrap">${row[c] || ''}</td>`);
-    table += '</tr>';
-  });
-
-  table += '</tbody></table>';
-  output.innerHTML = table;
+/* Helpers */
+function normalize(s){ return (s||"").toString().trim().toLowerCase(); }
+function getNormalizedRow(row){ const map = {}; Object.keys(row||{}).forEach(k=>map[normalize(k)]=row[k]); return map; }
+function pickField(nrow, candidates){ for(const c of candidates) if(nrow[c]!==undefined && nrow[c]!==null && nrow[c].toString().trim()!=="") return nrow[c]; return ""; }
+function parseNilai(raw){
+  if(!raw) return 0;
+  const n = Number(raw.toString().replace(/[^\d]/g,''));
+  return isNaN(n)?0:n;
+}
+function adjustNilaiSkala(nilai){ return (nilai>10000000)?Math.round(nilai/100):nilai; }
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+function categorizeItem(kondisi){
+  const k = (kondisi||'').toLowerCase();
+  if(k.includes('baik')) return 'Baik';
+  if(k.includes('rusak ringan')) return 'Rusak Ringan';
+  if(k.includes('rusak berat')) return 'Rusak Berat';
+  if(k.includes('ditemukan')) return 'Ditemukan';
+  if(k.includes('tidak ditemukan') || k.includes('hilang')) return 'Tidak Ditemukan';
+  return 'Lainnya';
 }
 
-// Export PDF
-document.getElementById('btnPdf').addEventListener('click', () => {
-  if (!filteredData.length) return alert('Data kosong.');
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+/* Load data */
+async function loadAllFromSpreadsheets(){
+  allData = [];
+  showLoading(true);
+  const select = document.getElementById('kecamatanSelect');
+  select.innerHTML = `<option value="">-- Pilih Kecamatan --</option>`;
+  Object.keys(dataKecamatan).forEach(k => { const o=document.createElement('option'); o.value=k; o.textContent=k; select.appendChild(o); });
 
-  const allCols = Object.keys(filteredData[0]);
-  const selectedCols = allCols.filter((col, idx) => idx === 0 || idx === 1 || (idx >= 10 && idx <= 27));
+  for(const [kecamatan,url] of Object.entries(dataKecamatan)){
+    try{
+      const res = await fetch(url);
+      if(!res.ok) continue;
+      const csv = await res.text();
+      const rows = Papa.parse(csv, { header:true, skipEmptyLines:true }).data || [];
+      rows.forEach(rawRow=>{
+        const n = getNormalizedRow(rawRow);
+        const sekolah = pickField(n,['pengguna','sekolah','pengguna_barang'])||"Tidak Diketahui";
+        const barang = pickField(n,['nama barang','nama_barang','barang'])||"-";
+        const nibar = pickField(n,['nibar','no register','no_register_barang'])||"-";
+        const kondisiSbl = pickField(n,['kondisi sebelumnya','kondisi_sebelumnya'])||"-";
+        const kondisiNow = pickField(n,['kondisi saat ini','kondisi_saat_ini','kondisi'])||kondisiSbl||"-";
+        let nilai = adjustNilaiSkala(parseNilai(pickField(n,['nilai perolehan','harga','harga perolehan'])||0));
+        const kecFromRow = pickField(n,['kecamatan','kec','wilayah'])||kecamatan;
+        allData.push({ kecamatan:kecFromRow,sekolah,barang,nibar,kondisiSebelumnya:kondisiSbl,kondisiSaatIni:kondisiNow,nilai });
+      });
+    } catch(e){ console.error("Error", e); }
+  }
+  showLoading(false);
+  showRekapAllKecamatan();
+}
 
-  const headers = [selectedCols];
-  const rows = filteredData.map(row => selectedCols.map(c => row[c] || ''));
+/* Loading UI */
+function showLoading(on){ document.getElementById('loading').classList.toggle('hidden',!on); }
 
-  doc.autoTable({
-    head: headers,
-    body: rows,
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [59, 130, 246] },
+/* Show rekap semua kecamatan */
+function showRekapAllKecamatan(){
+  const container = document.getElementById('detailContainer');
+  container.innerHTML='';
+  const kecList = {};
+  allData.forEach(r=>{ const k=r.kecamatan||'Tidak Diketahui'; if(!kecList[k]) kecList[k]=[]; kecList[k].push(r); });
+
+  Object.entries(kecList).forEach(([kec,items])=>{
+    const kecDiv = document.createElement('div');
+    kecDiv.className='mb-4';
+    kecDiv.innerHTML=`<h2 class="text-xl font-semibold mb-2">Kecamatan: ${kec}</h2>`;
+    container.appendChild(kecDiv);
+
+    // Kelompokkan per sekolah
+    const schools = {};
+    items.forEach(it=>{ const s=it.sekolah||'Tidak Diketahui'; if(!schools[s]) schools[s]=[]; schools[s].push(it); });
+
+    Object.entries(schools).forEach(([school, items])=>{
+      const kategori = { 'Baik':[], 'Rusak Ringan':[], 'Rusak Berat':[], 'Ditemukan':[], 'Tidak Ditemukan':[], 'Lainnya':[] };
+      items.forEach(it=> kategori[categorizeItem(it.kondisiSaatIni)].push(it));
+
+      const schoolDiv = document.createElement('div');
+      schoolDiv.className='mb-2';
+      schoolDiv.innerHTML=`
+        <button class="w-full text-left px-3 py-2 bg-gray-200 rounded mb-1 collapse-btn">${school} (klik untuk buka/tutup)</button>
+        <div class="collapse-content hidden p-2 border rounded mb-2">
+          ${Object.entries(kategori).map(([cat, list])=>{
+            if(list.length===0) return '';
+            const total = list.reduce((s,it)=>s+(it.nilai||0),0);
+            return `
+              <div class="mb-2">
+                <div class="font-semibold flex justify-between items-center">
+                  <span>${cat} — Total Nilai: Rp ${total.toLocaleString('id-ID')} (${list.length} item)</span>
+                  <span class="flex gap-1">
+                    <button class="px-2 py-1 bg-green-600 text-white rounded export-cat-excel">Excel</button>
+                    <button class="px-2 py-1 bg-red-600 text-white rounded export-cat-pdf">PDF</button>
+                  </span>
+                </div>
+                <table class="w-full text-sm border mb-1">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="p-1">Nama Barang</th>
+                      <th class="p-1">NIBAR</th>
+                      <th class="p-1">Kondisi Sebelumnya</th>
+                      <th class="p-1">Kondisi Saat Ini</th>
+                      <th class="p-1">Nilai (Rp)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${list.map(it=>`<tr class="border-b">
+                      <td class="p-1">${escapeHtml(it.barang)}</td>
+                      <td class="p-1">${escapeHtml(it.nibar)}</td>
+                      <td class="p-1">${escapeHtml(it.kondisiSebelumnya)}</td>
+                      <td class="p-1">${escapeHtml(it.kondisiSaatIni)}</td>
+                      <td class="p-1 text-right">${(it.nilai||0).toLocaleString('id-ID')}</td>
+                    </tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+      kecDiv.appendChild(schoolDiv);
+
+      // Collapse button
+      schoolDiv.querySelector('.collapse-btn').addEventListener('click', ()=> schoolDiv.querySelector('.collapse-content').classList.toggle('hidden'));
+
+      // Export per kategori
+      const catKeys = Object.keys(kategori);
+      schoolDiv.querySelectorAll('.export-cat-excel').forEach((btn,i)=>{ btn.addEventListener('click', ()=> exportSchoolExcel(`${school}_${catKeys[i]}`, kategori[catKeys[i]])); });
+      schoolDiv.querySelectorAll('.export-cat-pdf').forEach((btn,i)=>{ btn.addEventListener('click', async ()=> exportElementToPDF(schoolDiv.querySelectorAll('.collapse-content > div')[i], `${school}_${catKeys[i]}.pdf`)); });
+    });
   });
-  doc.save('data.pdf');
-});
+}
 
-// Export Excel
-document.getElementById('btnExcel').addEventListener('click', () => {
-  if (!filteredData.length) return alert('Data kosong.');
-
-  const allCols = Object.keys(filteredData[0]);
-  const selectedCols = allCols.filter((col, idx) => idx === 0 || idx === 1 || (idx >= 10 && idx <= 27));
-
-  const exportData = filteredData.map(row => {
-    const obj = {};
-    selectedCols.forEach(c => obj[c] = row[c] || '');
-    return obj;
-  });
-
-  const ws = XLSX.utils.json_to_sheet(exportData);
+/* Export helpers */
+function exportSchoolExcel(schoolName, list){
+  const rows = list.map(it=>({
+    'Nama Sekolah': schoolName,
+    'Nama Barang': it.barang,
+    'NIBAR': it.nibar,
+    'Kondisi Sebelumnya': it.kondisiSebelumnya,
+    'Kondisi Saat Ini': it.kondisiSaatIni,
+    'Nilai Perolehan (Rp)': it.nilai
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Data");
-  XLSX.writeFile(wb, "data.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, 'Detail');
+  XLSX.writeFile(wb, `${schoolName}_Detail.xlsx`);
+}
+async function exportElementToPDF(el, filename){
+  const canvas = await html2canvas(el,{scale:2,useCORS:true});
+  const img = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p','pt','a4');
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = canvas.height*pdfWidth/canvas.width;
+  pdf.addImage(img,'PNG',0,0,pdfWidth,pdfHeight);
+  pdf.save(filename);
+}
+
+/* Event listeners */
+document.getElementById('refreshBtn').addEventListener('click', loadAllFromSpreadsheets);
+document.getElementById('kecamatanSelect').addEventListener('change', e=>{
+  const v=e.target.value;
+  if(!v) showRekapAllKecamatan();
+  else {
+    const rows = allData.filter(r=>r.kecamatan===v);
+    allDataBackup = allData;
+    allData = rows;
+    showRekapAllKecamatan();
+    allData = allDataBackup;
+  }
 });
+document.getElementById('exportAllExcel').addEventListener('click', ()=>{
+  const ws = XLSX.utils.json_to_sheet(allData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'AllData');
+  XLSX.writeFile(wb,'Rekap_Aset_All_Kecamatan.xlsx');
+});
+document.getElementById('exportAllPDF').addEventListener('click', async ()=>{
+  const el = document.querySelector('.container') || document.body;
+  await exportElementToPDF(el,'Rekap_Aset_All_Kecamatan.pdf');
+});
+
+/* Init */
+loadAllFromSpreadsheets();
 </script>
-
 </body>
-
 </html>
